@@ -2,430 +2,157 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>AppHub — каталог приложений</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Магазин приложений</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  :root {
-    --bg: var(--tg-theme-bg-color, #ffffff);
-    --bg2: var(--tg-theme-secondary-bg-color, #f2f3f7);
-    --text: var(--tg-theme-text-color, #14151a);
-    --hint: var(--tg-theme-hint-color, #7d808a);
-    --link: var(--tg-theme-link-color, #2a6df4);
-    --btn: var(--tg-theme-button-color, #2a6df4);
-    --btn-text: var(--tg-theme-button-text-color, #ffffff);
-    --line: color-mix(in srgb, var(--hint) 22%, transparent);
-    --radius: 16px;
-  }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    -webkit-font-smoothing: antialiased; }
-  body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); min-height: 100vh; }
-  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
-
-  /* header */
-  header { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 14px 16px 8px; }
-  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-  .logo { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 18px;
-    background: linear-gradient(135deg, #5b8cff, #8a5bff); color: #fff; }
-  .brand h1 { font-size: 20px; margin: 0; letter-spacing: -.3px; }
-  .brand small { color: var(--hint); font-size: 12px; display: block; margin-top: 1px; }
-  .search { position: relative; }
-  .search input { width: 100%; height: 42px; border: 0; outline: 0; border-radius: 12px; padding: 0 14px 0 40px;
-    background: var(--bg2); color: var(--text); font-size: 16px; }
-  .search input::placeholder { color: var(--hint); }
-  .search svg { position: absolute; left: 13px; top: 12px; width: 18px; height: 18px; stroke: var(--hint); fill: none; stroke-width: 2; }
-
-  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 10px 16px 4px; margin: 0 -16px; scrollbar-width: none; }
-  .chips::-webkit-scrollbar { display: none; }
-  .chip { flex: none; padding: 7px 14px; border-radius: 20px; background: var(--bg2); font-size: 14px; white-space: nowrap; transition: .15s; }
-  .chip.active { background: var(--btn); color: var(--btn-text); }
-
-  main { padding: 6px 16px 0; }
-  section { margin-top: 18px; }
-  .sec-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
-  .sec-head h2 { font-size: 19px; margin: 0; letter-spacing: -.2px; }
-  .sec-head span { color: var(--hint); font-size: 13px; }
-
-  /* banners */
-  .banners { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 4px 16px; scrollbar-width: none; }
-  .banners::-webkit-scrollbar { display: none; }
-  .banner { flex: none; width: 82%; max-width: 340px; height: 150px; border-radius: 20px; padding: 16px; color: #fff; scroll-snap-align: start;
-    display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; text-align: left; }
-  .banner .tag { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; opacity: .85; }
-  .banner h3 { margin: 4px 0 0; font-size: 21px; line-height: 1.15; max-width: 70%; }
-  .banner .emoji { position: absolute; right: 10px; bottom: -6px; font-size: 84px; opacity: .95; transform: rotate(-8deg); }
-  .banner .sub { font-size: 13px; opacity: .9; max-width: 65%; }
-
-  /* app rows */
-  .app { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
-  .app + .app { border-top: 1px solid var(--line); }
-  .icon { flex: none; width: 58px; height: 58px; border-radius: 15px; display: grid; place-items: center; font-size: 30px; color: #fff; }
-  .info { flex: 1; min-width: 0; text-align: left; }
-  .info b { display: block; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .info .meta { color: var(--hint); font-size: 13px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .get { flex: none; min-width: 84px; height: 34px; padding: 0 14px; border-radius: 17px; font-weight: 600; font-size: 14px;
-    background: color-mix(in srgb, var(--btn) 14%, transparent); color: var(--btn); position: relative; overflow: hidden; }
-  .get.open { background: var(--bg2); color: var(--text); }
-  .get .bar { position: absolute; inset: 0 auto 0 0; width: 0; background: color-mix(in srgb, var(--btn) 30%, transparent); transition: width .12s linear; }
-  .get span { position: relative; }
-
-  .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 14px 10px; }
-  .card { text-align: center; }
-  .card .icon { width: 100%; max-width: 92px; height: auto; aspect-ratio: 1; margin: 0 auto; font-size: 40px; border-radius: 22px; }
-  .card b { display: block; font-size: 13px; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .card small { color: var(--hint); font-size: 12px; }
-
-  .empty { text-align: center; color: var(--hint); padding: 50px 20px; }
-  .empty .big { font-size: 46px; margin-bottom: 8px; }
-
-  /* bottom tabs */
-  nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 30; display: flex; background: color-mix(in srgb, var(--bg) 92%, transparent);
-    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--line);
-    padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); }
-  nav button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; color: var(--hint); font-size: 11px; }
-  nav button svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  nav button.active { color: var(--btn); }
-
-  /* detail sheet */
-  .overlay { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.45); opacity: 0; pointer-events: none; transition: opacity .25s; }
-  .overlay.show { opacity: 1; pointer-events: auto; }
-  .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; max-height: 92vh; overflow-y: auto; background: var(--bg);
-    border-radius: 22px 22px 0 0; transform: translateY(105%); transition: transform .3s cubic-bezier(.2,.8,.2,1);
-    padding: 10px 16px calc(24px + env(safe-area-inset-bottom)); }
-  .sheet.show { transform: translateY(0); }
-  .grab { width: 38px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto 14px; }
-  .d-head { display: flex; gap: 14px; align-items: center; }
-  .d-head .icon { width: 84px; height: 84px; font-size: 44px; border-radius: 22px; }
-  .d-head h2 { margin: 0; font-size: 22px; letter-spacing: -.3px; }
-  .d-head p { margin: 3px 0 0; color: var(--link); font-size: 14px; }
-  .d-actions { display: flex; gap: 10px; margin: 16px 0; }
-  .d-actions .get { flex: 1; height: 44px; border-radius: 14px; font-size: 16px; background: var(--btn); color: var(--btn-text); }
-  .d-actions .get.open { background: var(--bg2); color: var(--text); }
-  .d-actions .get .bar { background: rgba(255,255,255,.3); }
-  .share { flex: none; width: 44px; height: 44px; border-radius: 14px; background: var(--bg2); display: grid; place-items: center; }
-  .share svg { width: 20px; height: 20px; stroke: var(--text); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  .stats { display: flex; background: var(--bg2); border-radius: 14px; padding: 12px 0; }
-  .stats div { flex: 1; text-align: center; }
-  .stats div + div { border-left: 1px solid var(--line); }
-  .stats b { display: block; font-size: 16px; }
-  .stats small { color: var(--hint); font-size: 12px; }
-  .shots { display: flex; gap: 10px; overflow-x: auto; margin: 16px -16px 0; padding: 0 16px; scrollbar-width: none; }
-  .shots::-webkit-scrollbar { display: none; }
-  .shot { flex: none; width: 130px; height: 230px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 8px; color: #fff; font-size: 40px; }
-  .shot small { font-size: 12px; opacity: .85; }
-  .d-desc { margin-top: 16px; line-height: 1.45; font-size: 15px; }
-  .d-desc h3 { margin: 0 0 6px; font-size: 17px; }
-  .d-info { margin-top: 14px; }
-  .d-info div { display: flex; justify-content: space-between; padding: 10px 0; font-size: 14px; border-top: 1px solid var(--line); }
-  .d-info span { color: var(--hint); }
-
-  .toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom)); z-index: 100; transform: translate(-50%, 20px);
-    background: #1f2128; color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 14px; opacity: 0; transition: .25s; pointer-events: none; }
-  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+:root{--bg:#f3f4f6;--card:#fff;--text:#14161b;--sub:#7a8090;--accent:#0a74ff;--soft:#eceef2;
+box-sizing:border-box;padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1014;--card:#181b22;--text:#eef0f5;--sub:#9099ad;--soft:#252932;--accent:#4d9bff}}
+:root[data-theme="dark"]{--bg:#0e1014;--card:#181b22;--text:#eef0f5;--sub:#9099ad;--soft:#252932;--accent:#4d9bff}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:560px;margin:0 auto}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header{position:sticky;top:0;z-index:10;background:var(--card);padding:14px 20px 12px;display:flex;gap:12px;align-items:flex-start;justify-content:space-between;box-shadow:0 1px 0 rgba(0,0,0,.06)}
+.brand{display:flex;gap:10px;align-items:center;font-size:28px;font-weight:700;letter-spacing:-.02em}
+.brand img{width:42px;height:42px;border-radius:11px}
+header p{font-size:12px;color:var(--sub);margin-top:6px;max-width:300px}
+.hr{display:flex;align-items:center;gap:18px;padding-top:4px}
+.hr b{font-size:15px}.hr .burger{border:0;background:none;font-size:26px;line-height:1}
+.rows{padding:22px 0 8px;display:grid;gap:12px}
+.mq{display:flex;gap:12px;overflow-x:auto;padding:0 20px;scrollbar-width:none}
+.mq::-webkit-scrollbar{display:none}
+.ic{flex:none;width:74px;height:74px;border-radius:20px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:28px}
+.ic.s{width:56px;height:56px;border-radius:15px;font-size:22px}
+.find{margin:12px 12px 0;background:var(--card);border-radius:28px;padding:22px 0 18px}
+.find h2{font-size:26px;letter-spacing:-.02em;padding:0 22px 14px;line-height:1.15}
+.sb{display:flex;align-items:center;gap:8px;margin:0 16px;background:var(--soft);border-radius:16px;padding:6px 6px 6px 14px}
+.sb input{flex:1;min-width:0;border:0;background:none;color:var(--text);font:inherit;padding:8px 0;outline:none}
+.go{border:0;background:var(--accent);color:#fff;border-radius:12px;padding:12px 18px;font-weight:600}
+.apps{display:grid;grid-auto-flow:column;grid-template-rows:repeat(3,auto);grid-auto-columns:78%;gap:18px 14px;overflow-x:auto;padding:22px 20px 0;scrollbar-width:none}
+.apps::-webkit-scrollbar{display:none}
+.app{display:flex;gap:12px;align-items:center;min-width:0}
+.app .t{min-width:0}
+.app b{display:block;font-weight:500;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app span{display:block;color:var(--sub);font-size:13px}
+.none{color:var(--sub);padding:24px 22px 4px}
+.promos{display:flex;gap:12px;overflow-x:auto;padding:20px 12px;scrollbar-width:none}
+.promos::-webkit-scrollbar{display:none}
+.pr{flex:none;width:78%;max-width:300px;min-height:150px;border-radius:20px;padding:18px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end}
+.pr b{font-size:18px;line-height:1.2;margin-bottom:6px}.pr span{font-size:12px;opacity:.85}
+.sh{display:flex;justify-content:space-between;align-items:baseline;padding:6px 20px 12px}
+.sh h3{font-size:22px;letter-spacing:-.02em}.sh a{color:var(--accent);font-weight:600;font-size:14px;text-decoration:none}
+.cats{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);grid-auto-columns:max-content;gap:12px;overflow-x:auto;padding:0 20px 8px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{border:0;background:var(--card);border-radius:16px;padding:14px 18px;display:flex;gap:10px;align-items:center;font-size:16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.cat.on{background:var(--accent);color:#fff}
+.themes{margin:28px 12px 0;background:var(--soft);border-radius:28px;padding:24px 20px 28px}
+.themes h3{font-size:24px;letter-spacing:-.02em;padding:0 4px 16px}
+.pills{display:flex;flex-wrap:wrap;gap:10px}
+.pill{border:0;background:var(--card);border-radius:22px;padding:12px 20px;font-size:15px}
+.pill.on{background:var(--accent);color:#fff}
+footer{padding:28px 20px 100px;text-align:center;color:var(--sub);font-size:13px}
+.soc{display:flex;gap:14px;justify-content:center;margin-bottom:14px}
+.soc i{width:44px;height:44px;border-radius:13px;background:var(--text);color:var(--bg);display:grid;place-items:center;font-style:normal;font-weight:800;font-size:15px}
+.fab{position:fixed;right:14px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border:0;border-radius:18px;background:var(--accent);color:#fff;display:grid;place-items:center;box-shadow:0 6px 18px rgba(10,116,255,.35)}
 </style>
 </head>
 <body>
-
+<div class="wrap">
 <header>
-  <div class="brand">
-    <div class="logo">▦</div>
-    <div>
-      <h1 id="title">AppHub</h1>
-      <small id="hello">Каталог приложений</small>
-    </div>
+  <div>
+    <div class="brand"><img src="icons/banner.png" alt=""><span id="name">Магазин</span></div>
+    <p>Магазин приложений для iOS. Безопасный доступ к популярным играм и приложениям</p>
   </div>
-  <div class="search">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-    <input id="q" type="search" placeholder="Поиск приложений и игр" autocomplete="off">
-  </div>
-  <div class="chips" id="chips"></div>
+  <div class="hr"><b>RU ▾</b><button class="burger" aria-label="Меню">☰</button></div>
 </header>
 
-<main id="main"></main>
+<div class="rows" id="rows"></div>
 
-<nav>
-  <button data-tab="home" class="active">
-    <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Главная
-  </button>
-  <button data-tab="apps">
-    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Приложения
-  </button>
-  <button data-tab="games">
-    <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 10v5M4.5 12.5h5M16 11.5h.01M18.5 13.5h.01"/></svg>Игры
-  </button>
-  <button data-tab="mine">
-    <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Мои
-  </button>
-</nav>
+<section class="find">
+  <h2>Найдите приложение для себя</h2>
+  <div class="sb"><span style="color:var(--sub)">🔍</span><input id="q" type="search" placeholder="Музыка" aria-label="Поиск"><button class="go" id="go">Найти</button></div>
+  <div class="apps" id="apps"></div>
+</section>
 
-<div class="overlay" id="overlay"></div>
-<div class="sheet" id="sheet"></div>
-<div class="toast" id="toast"></div>
+<div class="promos">
+  <div class="pr" style="background:#0f9d8a"><b>Проверенные приложения</b><span>Каждое приложение проходит модерацию</span></div>
+  <div class="pr" style="background:#1479f5"><b>Доступ к приложениям без ограничений</b><span>Всё под рукой — от банков до игровых хитов</span></div>
+  <div class="pr" style="background:#8a3ee0"><b>Удобные подписки</b><span>Платите картой или с телефона</span></div>
+</div>
+
+<div class="sh"><h3>Всё для жизни и работы</h3><a href="#" id="all">Все приложения ›</a></div>
+<div class="cats" id="cats"></div>
+
+<section class="themes">
+  <h3>Интересные тематики</h3>
+  <div class="pills" id="pills"></div>
+</section>
+
+<footer>
+  <div class="soc"><i>VK</i><i>OK</i><i>TG</i><i>✦</i></div>
+  © 2026 — приложения и игры для iPhone<br><br>Все права защищены
+</footer>
+</div>
+<button class="fab" id="fab" aria-label="Поддержка"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.9 3 3 6.6 3 11c0 2.4 1.2 4.5 3.1 6L5 21l4.2-1.8c.9.2 1.8.3 2.8.3 5.1 0 9-3.6 9-8s-3.900-8.500-9-8.500z"/></svg></button>
 
 <script>
-/* ---------- Telegram ---------- */
-const tg = window.Telegram && Telegram.WebApp ? Telegram.WebApp : null;
-if (tg) {
-  tg.ready();
-  tg.expand();
-  try { tg.setHeaderColor('bg_color'); } catch (e) {}
-  const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
-  if (u && u.first_name) document.getElementById('hello').textContent = 'Привет, ' + u.first_name + '!';
-}
-const haptic = (t = 'light') => { try { tg && tg.HapticFeedback.impactOccurred(t); } catch (e) {} };
+var tg = window.Telegram && window.Telegram.WebApp;
+if (tg) { try { tg.ready(); tg.expand(); if (tg.colorScheme) document.documentElement.setAttribute('data-theme', tg.colorScheme); } catch(e){} }
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]})}
 
-/* ---------- Данные (демо-каталог, все приложения вымышленные) ---------- */
-const G = (a, b) => `linear-gradient(135deg, ${a}, ${b})`;
-const APPS = [
-  { id: 1,  name: 'Лента Новостей', dev: 'Медиа Лаб', cat: 'Новости', type: 'apps', icon: '📰', bg: G('#ff7a59','#ff3d71'), rating: 4.7, dl: '5 млн+', size: 38, age: '6+', ver: '3.2.1', desc: 'Главные новости России и мира в одной ленте. Умные подборки, офлайн-режим и уведомления только о том, что действительно важно.' },
-  { id: 2,  name: 'Кошелёк+', dev: 'ФинТех Групп', cat: 'Финансы', type: 'apps', icon: '💳', bg: G('#1fc98e','#0b8f6a'), rating: 4.8, dl: '10 млн+', size: 74, age: '12+', ver: '8.0.4', desc: 'Переводы, платежи и учёт расходов. Аналитика трат по категориям и напоминания о регулярных платежах.' },
-  { id: 3,  name: 'Маршрут', dev: 'ГеоСофт', cat: 'Навигация', type: 'apps', icon: '🧭', bg: G('#4facfe','#2a6df4'), rating: 4.6, dl: '10 млн+', size: 121, age: '0+', ver: '5.7.0', desc: 'Офлайн-карты, пробки в реальном времени и построение маршрута для авто, транспорта и пешком.' },
-  { id: 4,  name: 'Заметки Pro', dev: 'Студия Пера', cat: 'Продуктивность', type: 'apps', icon: '📝', bg: G('#ffd34e','#ff9f1c'), rating: 4.9, dl: '1 млн+', size: 24, age: '0+', ver: '2.4.9', desc: 'Быстрые заметки, чек-листы и напоминания. Синхронизация между устройствами и защита паролем.' },
-  { id: 5,  name: 'Музыка Волна', dev: 'Звук Лаб', cat: 'Музыка', type: 'apps', icon: '🎧', bg: G('#a855f7','#6d28d9'), rating: 4.5, dl: '5 млн+', size: 96, age: '12+', ver: '6.1.2', desc: 'Миллионы треков и подкастов, персональные подборки и скачивание для прослушивания без интернета.' },
-  { id: 6,  name: 'Фитнес Старт', dev: 'Спорт Тех', cat: 'Здоровье', type: 'apps', icon: '🏃', bg: G('#34d399','#059669'), rating: 4.7, dl: '1 млн+', size: 58, age: '6+', ver: '4.0.3', desc: 'Тренировки дома и на улице, шагомер, трекер сна и воды. Планы на 7, 14 и 30 дней.' },
-  { id: 7,  name: 'Язык за 15 минут', dev: 'Эдьюкейт', cat: 'Образование', type: 'apps', icon: '🎓', bg: G('#f472b6','#db2777'), rating: 4.8, dl: '1 млн+', size: 67, age: '6+', ver: '3.9.0', desc: 'Короткие ежедневные уроки иностранных языков с игровой механикой, словарём и произношением.' },
-  { id: 8,  name: 'Облако 360', dev: 'Дата Хаб', cat: 'Продуктивность', type: 'apps', icon: '☁️', bg: G('#60a5fa','#3b82f6'), rating: 4.4, dl: '5 млн+', size: 45, age: '0+', ver: '7.3.5', desc: 'Хранилище для фото, документов и видео. Автозагрузка, общий доступ по ссылке и поиск по тексту на фото.' },
-  { id: 9,  name: 'Космический Курьер', dev: 'Пиксель Дог', cat: 'Аркады', type: 'games', icon: '🚀', bg: G('#0f172a','#6366f1'), rating: 4.6, dl: '1 млн+', size: 210, age: '6+', ver: '1.8.0', desc: 'Доставляйте грузы между планетами, уворачивайтесь от астероидов и прокачивайте свой корабль.' },
-  { id: 10, name: 'Шахматы Блиц', dev: 'Гамбит Игры', cat: 'Настольные', type: 'games', icon: '♟️', bg: G('#78350f','#b45309'), rating: 4.9, dl: '5 млн+', size: 52, age: '0+', ver: '9.2.1', desc: 'Партии с друзьями и соперниками со всего мира, разбор ходов и ежедневные задачи.' },
-  { id: 11, name: 'Тихая Ферма', dev: 'Грядка Студио', cat: 'Симуляторы', type: 'games', icon: '🌾', bg: G('#84cc16','#16a34a'), rating: 4.7, dl: '5 млн+', size: 340, age: '0+', ver: '2.5.4', desc: 'Расслабляющая ферма: выращивайте урожай, заботьтесь о животных и украшайте участок.' },
-  { id: 12, name: 'Логика Слов', dev: 'Паззл Лаб', cat: 'Головоломки', type: 'games', icon: '🔤', bg: G('#fb923c','#ef4444'), rating: 4.8, dl: '10 млн+', size: 31, age: '0+', ver: '4.4.0', desc: 'Составляйте слова из букв, проходите уровни и соревнуйтесь с друзьями в ежедневных турнирах.' },
-  { id: 13, name: 'Гонки Дрифт', dev: 'Турбо Геймз', cat: 'Гонки', type: 'games', icon: '🏎️', bg: G('#ef4444','#7f1d1d'), rating: 4.3, dl: '5 млн+', size: 480, age: '6+', ver: '3.1.7', desc: 'Дрифт на городских трассах, тюнинг машин и онлайн-заезды в реальном времени.' },
-  { id: 14, name: 'Подземелье Рун', dev: 'Меч и Код', cat: 'Ролевые', type: 'games', icon: '🗡️', bg: G('#1e1b4b','#7c3aed'), rating: 4.6, dl: '1 млн+', size: 620, age: '12+', ver: '1.2.3', desc: 'Исследуйте подземелья, собирайте руны и сражайтесь с боссами в тактическом RPG.' },
+/* ---- ДАННЫЕ: меняйте здесь ---- */
+var APPS = [
+ {n:'Банк Онлайн',c:'Финансы',r:4.8,col:'#16a37f'},
+ {n:'Карты и Навигатор',c:'Путешествия',r:4.7,col:'#2a5bff'},
+ {n:'Маркет Плюс',c:'Покупки',r:4.6,col:'#e5484d'},
+ {n:'Космо Рейс',c:'Игры',r:4.5,col:'#7a3cff'},
+ {n:'Шахматы Про',c:'Игры',r:4.9,col:'#14182a'},
+ {n:'Музыка Плей',c:'Музыка',r:4.7,col:'#f08a24'},
+ {n:'Заметки Лайт',c:'Работа',r:4.4,col:'#d4a017'},
+ {n:'Фитнес Дом',c:'Здоровье',r:4.6,col:'#e0457b'},
+ {n:'Башни и Драконы',c:'Игры',r:4.3,col:'#0e8a9e'}
 ];
-const BANNERS = [
-  { id: 9,  tag: 'Игра недели', title: 'Космический Курьер', sub: 'Доставь груз до рассвета', bg: G('#1e1b4b','#6366f1'), emoji: '🚀' },
-  { id: 2,  tag: 'Подборка', title: 'Финансы под контролем', sub: 'Кошелёк+ и другие помощники', bg: G('#059669','#34d399'), emoji: '💳' },
-  { id: 7,  tag: 'Учимся', title: 'Язык за 15 минут', sub: 'Начни сегодня', bg: G('#db2777','#fb7185'), emoji: '🎓' },
-];
+var CATS = [['₽','Финансы'],['🏛','Государственные'],['✔','Задачи'],['♥','Здоровье'],['✈','Путешествия'],['🎓','Образование'],['🛒','Покупки'],['♪','Музыка']];
+var TAGS = ['Однопользовательская игра','Офлайн','Самосовершенствование','Стиль жизни','Личные помощники','Логическая игра','Работа','Социальные','Интеллектуальные игры','Гиперказуальная игра'];
+var COLS = ['#e5484d','#0a74ff','#16a37f','#f08a24','#14182a','#7a3cff','#d4a017','#0e8a9e','#e0457b','#2a5bff','#8a3ee0','#c2410c','#0f766e','#be185d','#1d4ed8','#b45309','#4d7c0f','#6d28d9','#0369a1','#9f1239','#166534'];
+var LET = 'АБВГДЕЖЗИКЛМНОПРСТУФХ';
+/* -------------------------------- */
 
-/* ---------- Состояние ---------- */
-const state = { tab: 'home', cat: 'Все', q: '' };
-let installed = new Set();
-const progress = {}; // id -> 0..100
+(function(){
+  var h='', i, k, offs=[0,40,15];
+  for (k=0;k<3;k++){ h+='<div class="mq">'; for(i=0;i<7;i++){ var x=k*7+i; h+='<div class="ic" style="background:'+COLS[x]+'">'+LET[x]+'</div>'; } h+='</div>'; }
+  $('rows').innerHTML=h;
+  var m=document.querySelectorAll('.mq'); for(k=0;k<3;k++) m[k].scrollLeft=offs[k];
+})();
 
-function loadInstalled() {
-  try {
-    const raw = localStorage.getItem('apphub_installed');
-    if (raw) installed = new Set(JSON.parse(raw));
-  } catch (e) {}
-  try {
-    if (tg && tg.CloudStorage) {
-      tg.CloudStorage.getItem('installed', (err, val) => {
-        if (!err && val) {
-          try { installed = new Set(JSON.parse(val)); render(); } catch (e) {}
-        }
-      });
-    }
-  } catch (e) {}
+function drawApps(){
+  var q=$('q').value.trim().toLowerCase();
+  var l=APPS.filter(function(a){return !q||a.n.toLowerCase().indexOf(q)>-1||a.c.toLowerCase().indexOf(q)>-1});
+  $('apps').style.display = l.length ? '' : 'none';
+  var n=document.getElementById('none'); if(n) n.remove();
+  if(!l.length){ var d=document.createElement('div'); d.id='none'; d.className='none'; d.textContent='Ничего не найдено. Попробуйте другой запрос'; $('apps').after(d); }
+  $('apps').innerHTML=l.map(function(a){return '<div class="app"><div class="ic s" style="background:'+a.col+'">'+esc(a.n[0])+'</div><div class="t"><b>'+esc(a.n)+'</b><span>'+esc(a.c)+'</span><span>★ '+a.r+'</span></div></div>'}).join('');
 }
-function saveInstalled() {
-  const s = JSON.stringify([...installed]);
-  try { localStorage.setItem('apphub_installed', s); } catch (e) {}
-  try { tg && tg.CloudStorage && tg.CloudStorage.setItem('installed', s); } catch (e) {}
-}
+$('q').addEventListener('input',drawApps);
+$('go').addEventListener('click',function(){drawApps();$('q').blur()});
+$('all').addEventListener('click',function(e){e.preventDefault();$('q').value='';drawApps();window.scrollTo({top:$('q').getBoundingClientRect().top+scrollY-90,behavior:'smooth'})});
 
-/* ---------- Рендер ---------- */
-const $ = (s) => document.querySelector(s);
-const main = $('#main');
-
-function btnHTML(a, cls = '') {
-  const p = progress[a.id];
-  if (p !== undefined) return `<button class="get ${cls}" data-act="noop" data-id="${a.id}"><i class="bar" style="width:${p}%"></i><span>${Math.round(p)}%</span></button>`;
-  if (installed.has(a.id)) return `<button class="get open ${cls}" data-act="open" data-id="${a.id}"><span>Открыть</span></button>`;
-  return `<button class="get ${cls}" data-act="install" data-id="${a.id}"><span>Установить</span></button>`;
-}
-function rowHTML(a) {
-  return `<div class="app" data-id="${a.id}" data-act="details">
-    <div class="icon" style="background:${a.bg}">${a.icon}</div>
-    <div class="info"><b>${a.name}</b><div class="meta">${a.cat} · ★ ${a.rating} · ${a.size} МБ</div></div>
-    ${btnHTML(a)}
-  </div>`;
-}
-function cardHTML(a) {
-  return `<div class="card" data-id="${a.id}" data-act="details">
-    <div class="icon" style="background:${a.bg}">${a.icon}</div>
-    <b>${a.name}</b><small>★ ${a.rating}</small>
-  </div>`;
-}
-
-function categoriesFor(tab) {
-  const list = APPS.filter(a => tab === 'home' || tab === 'mine' ? true : a.type === tab).map(a => a.cat);
-  return ['Все', ...new Set(list)];
-}
-
-function renderChips() {
-  const cats = categoriesFor(state.tab);
-  if (!cats.includes(state.cat)) state.cat = 'Все';
-  $('#chips').innerHTML = state.tab === 'mine' ? '' :
-    cats.map(c => `<button class="chip ${c === state.cat ? 'active' : ''}" data-cat="${c}">${c}</button>`).join('');
-}
-
-function filtered() {
-  const q = state.q.trim().toLowerCase();
-  return APPS.filter(a => {
-    if (state.tab === 'apps' && a.type !== 'apps') return false;
-    if (state.tab === 'games' && a.type !== 'games') return false;
-    if (state.tab === 'mine' && !installed.has(a.id)) return false;
-    if (state.cat !== 'Все' && a.cat !== state.cat) return false;
-    if (q && !(a.name + ' ' + a.dev + ' ' + a.cat).toLowerCase().includes(q)) return false;
-    return true;
-  });
-}
-
-function render() {
-  renderChips();
-  const list = filtered();
-  const searching = state.q.trim().length > 0;
-  let html = '';
-
-  if (state.tab === 'home' && !searching && state.cat === 'Все') {
-    html += `<section><div class="banners">` + BANNERS.map(b =>
-      `<button class="banner" data-act="details" data-id="${b.id}" style="background:${b.bg}">
-        <div><div class="tag">${b.tag}</div><h3>${b.title}</h3></div>
-        <div class="sub">${b.sub}</div><div class="emoji">${b.emoji}</div></button>`).join('') + `</div></section>`;
-
-    const top = [...APPS].sort((a, b) => b.rating - a.rating).slice(0, 6);
-    html += `<section><div class="sec-head"><h2>Популярное</h2><span>выбор редакции</span></div>
-      <div class="grid-cards">${top.map(cardHTML).join('')}</div></section>`;
-    html += `<section><div class="sec-head"><h2>Новинки</h2><span>${APPS.length} в каталоге</span></div>
-      ${[...APPS].reverse().slice(0, 5).map(rowHTML).join('')}</section>`;
-  } else if (list.length) {
-    const title = searching ? 'Результаты поиска' :
-      state.tab === 'mine' ? 'Установленные' : state.tab === 'games' ? 'Игры' : state.tab === 'apps' ? 'Приложения' : 'Каталог';
-    html += `<section><div class="sec-head"><h2>${title}</h2><span>${list.length}</span></div>${list.map(rowHTML).join('')}</section>`;
-  } else {
-    html += state.tab === 'mine' && !searching
-      ? `<div class="empty"><div class="big">📦</div><b>Пока ничего не установлено</b><p>Загляните на главную и выберите что-нибудь интересное.</p></div>`
-      : `<div class="empty"><div class="big">🔍</div><b>Ничего не найдено</b><p>Попробуйте изменить запрос.</p></div>`;
-  }
-  main.innerHTML = html;
-  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.tab === state.tab));
-}
-
-/* ---------- Установка (демо-симуляция) ---------- */
-function install(id) {
-  if (progress[id] !== undefined || installed.has(id)) return;
-  haptic('medium');
-  progress[id] = 0;
-  refresh();
-  const t = setInterval(() => {
-    progress[id] += 6 + Math.random() * 14;
-    if (progress[id] >= 100) {
-      clearInterval(t);
-      delete progress[id];
-      installed.add(id);
-      saveInstalled();
-      try { tg && tg.HapticFeedback.notificationOccurred('success'); } catch (e) {}
-      toast('Установлено: ' + APPS.find(a => a.id === id).name);
-    }
-    refresh();
-  }, 160);
-}
-function refresh() {
-  render();
-  if (openedId) renderSheetButton();
-}
-
-/* ---------- Карточка приложения ---------- */
-let openedId = null;
-function openSheet(id) {
-  const a = APPS.find(x => x.id === id);
-  if (!a) return;
-  openedId = id;
-  haptic();
-  const shots = [0, 1, 2, 3].map(i =>
-    `<div class="shot" style="background:${a.bg};filter:hue-rotate(${i * 18}deg)"><span>${a.icon}</span><small>Экран ${i + 1}</small></div>`).join('');
-  $('#sheet').innerHTML = `
-    <div class="grab"></div>
-    <div class="d-head">
-      <div class="icon" style="background:${a.bg}">${a.icon}</div>
-      <div><h2>${a.name}</h2><p>${a.dev}</p></div>
-    </div>
-    <div class="d-actions"><span id="sheetBtn" style="display:contents"></span>
-      <button class="share" data-act="share" aria-label="Поделиться">
-        <svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14"/></svg>
-      </button>
-    </div>
-    <div class="stats">
-      <div><b>★ ${a.rating}</b><small>рейтинг</small></div>
-      <div><b>${a.dl}</b><small>загрузок</small></div>
-      <div><b>${a.age}</b><small>возраст</small></div>
-    </div>
-    <div class="shots">${shots}</div>
-    <div class="d-desc"><h3>Описание</h3>${a.desc}</div>
-    <div class="d-info">
-      <div><span>Категория</span>${a.cat}</div>
-      <div><span>Версия</span>${a.ver}</div>
-      <div><span>Размер</span>${a.size} МБ</div>
-      <div><span>Разработчик</span>${a.dev}</div>
-    </div>`;
-  renderSheetButton();
-  $('#overlay').classList.add('show');
-  $('#sheet').classList.add('show');
-  $('#sheet').scrollTop = 0;
-  if (tg) { tg.BackButton.show(); }
-}
-function renderSheetButton() {
-  const a = APPS.find(x => x.id === openedId);
-  const holder = $('#sheetBtn');
-  if (!a || !holder) return;
-  holder.outerHTML = btnHTML(a, '').replace('class="get', 'id="sheetBtn" class="get');
-}
-function closeSheet() {
-  openedId = null;
-  $('#overlay').classList.remove('show');
-  $('#sheet').classList.remove('show');
-  if (tg) tg.BackButton.hide();
-}
-if (tg) tg.BackButton.onClick(closeSheet);
-
-function shareApp() {
-  const a = APPS.find(x => x.id === openedId);
-  if (!a) return;
-  const text = `Смотри, что нашёл в каталоге: ${a.name} — ${a.cat}, рейтинг ${a.rating}`;
-  const link = 'https://t.me/share/url?url=' + encodeURIComponent(location.href) + '&text=' + encodeURIComponent(text);
-  if (tg && tg.openTelegramLink) tg.openTelegramLink(link); else window.open(link, '_blank');
-}
-
-let toastTimer;
-function toast(msg) {
-  const t = $('#toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
-}
-
-/* ---------- События ---------- */
-document.addEventListener('click', (e) => {
-  const tab = e.target.closest('nav button');
-  if (tab) { state.tab = tab.dataset.tab; state.cat = 'Все'; haptic(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-
-  const chip = e.target.closest('.chip');
-  if (chip) { state.cat = chip.dataset.cat; haptic(); render(); return; }
-
-  if (e.target.closest('#overlay')) { closeSheet(); return; }
-
-  const act = e.target.closest('[data-act]');
-  if (!act) return;
-  const id = Number(act.dataset.id);
-  switch (act.dataset.act) {
-    case 'install': e.stopPropagation(); install(id); break;
-    case 'open':    e.stopPropagation(); haptic(); toast('Это демо: здесь можно открыть ссылку на приложение'); break;
-    case 'noop':    e.stopPropagation(); break;
-    case 'share':   shareApp(); break;
-    case 'details': openSheet(id); break;
-  }
+$('cats').innerHTML=CATS.map(function(c){return '<button class="cat" data-c="'+c[1]+'"><span style="color:var(--accent)">'+c[0]+'</span>'+c[1]+'</button>'}).join('');
+$('cats').addEventListener('click',function(e){
+  var b=e.target.closest('.cat'); if(!b) return;
+  var on=b.classList.contains('on');
+  document.querySelectorAll('.cat').forEach(function(x){x.classList.remove('on')});
+  $('q').value=on?'':b.dataset.c; if(!on) b.classList.add('on');
+  drawApps(); window.scrollTo({top:$('q').getBoundingClientRect().top+scrollY-90,behavior:'smooth'});
 });
-
-$('#q').addEventListener('input', (e) => { state.q = e.target.value; render(); });
-$('#q').addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
-
-loadInstalled();
-render();
+$('pills').innerHTML=TAGS.map(function(t){return '<button class="pill">'+t+'</button>'}).join('');
+$('pills').addEventListener('click',function(e){var b=e.target.closest('.pill'); if(b) b.classList.toggle('on')});
+$('fab').addEventListener('click',function(){ if(tg&&tg.showAlert) tg.showAlert('Чат поддержки скоро появится'); else alert('Чат поддержки скоро появится'); });
+drawApps();
 </script>
 </body>
 </html>
