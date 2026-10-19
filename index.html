@@ -133,7 +133,7 @@
   <div class="brand">
     <div class="logo">▦</div>
     <div>
-      <h1 id="title">AppHub</h1>
+      <h1 id="title">RuStore</h1>
       <small id="hello">Каталог приложений</small>
     </div>
   </div>
@@ -208,7 +208,7 @@ const progress = {}; // id -> 0..100
 
 function loadInstalled() {
   try {
-    const raw = localStorage.getItem('apphub_installed');
+    const raw = localStorage.getItem('rustore_installed');
     if (raw) installed = new Set(JSON.parse(raw));
   } catch (e) {}
   try {
@@ -223,7 +223,7 @@ function loadInstalled() {
 }
 function saveInstalled() {
   const s = JSON.stringify([...installed]);
-  try { localStorage.setItem('apphub_installed', s); } catch (e) {}
+  try { localStorage.setItem('rustore_installed', s); } catch (e) {}
   try { tg && tg.CloudStorage && tg.CloudStorage.setItem('installed', s); } catch (e) {}
 }
 
